@@ -105,3 +105,6 @@ dist
 
 # IDE
 .idea/
+
+# Generated Files
+token.txt

@@ -5,25 +5,19 @@ const fs = require('fs')
 
 require('dotenv').config()
 
-const PORT = process.env.PORT
+const PORT_HTTP = process.env.PORT_HTTP
 const CALLBACK_URL = process.env.CALLBACK_URL
-const app = express()
+
+
 const client = new FitbitApiClient({
     clientId: process.env.FITBIT_CLIENT_ID,
     clientSecret: process.env.FITBIT_CLIENT_SECRET
 })
 
-function getCode() {
-    try {
-        return client.getAuthorizeUrl('activity heartrate profile sleep weight', CALLBACK_URL)
-    } catch (err) {
-        console.log('err is', err)
-    }
-}
-
+const app = express()
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
-app.listen(PORT, () => console.log('Server listening on port', PORT))
+app.listen(PORT_HTTP, () => console.log('Server listening on port', PORT_HTTP))
 
 
 app.get('/', (req, res) => {
@@ -31,10 +25,9 @@ app.get('/', (req, res) => {
 })
 
 app.get('/callback', (req, res) => {
-    console.log('query', req.query, 'body', req.body)
     client.getAccessToken(req.query.code, CALLBACK_URL).then(function (result) {
         // use the access token to fetch the user's profile information
-        fs.writeFileSync(__dirname + '/token.txt', result)
+        fs.writeFileSync(__dirname + '/token.txt', JSON.stringify(result))
         res.redirect('/ok')
     }).catch(function (error) {
         res.send(error)
@@ -43,7 +36,15 @@ app.get('/callback', (req, res) => {
 
 
 app.get('/ok', (req, res) => {
-    console.log('query', req.query, 'body', req.body)
-    res.send('code ok')
+    res.send('Token saved successful. Verify on file token.txt on project directory.')
 })
 
+
+// Functions
+function getCode() {
+    try {
+        return client.getAuthorizeUrl('activity heartrate profile sleep weight', CALLBACK_URL)
+    } catch (err) {
+        console.log('err is', err)
+    }
+}
